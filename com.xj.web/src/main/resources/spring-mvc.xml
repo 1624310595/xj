@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:mcv="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/mvc
+           http://www.springframework.org/schema/mvc/spring-mvc.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context.xsd
+           http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop.xsd
+           ">
+    <!--配置注解扫描controller层-->
+    <context:component-scan base-package="com.xj.web"></context:component-scan>
+
+    <!--配置视图解析器-->
+    <bean id="viewResources" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/pages/"></property>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+
+    <!--设置放行全部资源-->
+    <mcv:default-servlet-handler></mcv:default-servlet-handler>
+    <!--放行 部分资源-->
+    <!--<mvc:resources mapping="/css/**" location="/css/"></mvc:resources>-->
+
+    <!--开启spring对注解的支持-->
+    <mvc:annotation-driven></mvc:annotation-driven>
+
+    <!--
+      支持AOP的注解支持，AOP底层使用代理技术
+      JDK动态代理，要求必须有接口
+      cglib代理，生成子类对象，proxy-target-class="true" 默认使用cglib的方式
+  -->
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+</beans>
