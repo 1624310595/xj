@@ -26,44 +26,45 @@
 </head>
 
 <body class="hold-transition login-page">
-<div class="login-box" style="padding-top: 90px">
+<div class="login-box" style="padding-top: 60px">
     <!-- /.login-logo -->
-    <div class="login-box-body" >
-        <p class="login-box-msg">密码修改系统</p>
+    <div class="login-box-body">
+        <p class="login-box-msg">密码修改</p>
 
-        <form action="${pageContext.request.contextPath}/user/updatePwd.do" method="post">
+        <form method="post">
             <div class="form-group has-feedback">
                 <input type="text" name="email" class="form-control" id="email"
-                       placeholder="请输入您的邮箱" > <span
+                       placeholder="请输入您的邮箱"> <span
                     class="glyphicon glyphicon-envelope form-control-feedback"></span>
             </div>
-            <div class="form-group has-feedback">
+            <div class="form-group has-feedback" style="display:flex">
                 <input type="text" name="code" class="form-control" id="code"
                        placeholder="验证码" style="float: left">
-                <input type="button" value="获取验证码">
+                <input type="button" value="获取验证码" onclick="checkEmail()" id="but"
+                       class="btn btn-primary btn-block btn-flat">
             </div>
-            <div class="form-group has-feedback">
-                <input type="password" name="password" class="form-control" id="password"
-                       placeholder="密码" value="${password}"> <span
-                    class="glyphicon glyphicon-lock form-control-feedback"></span>
-            </div>
-            <span style="font-size: 15px;color: red" id="errMsg">${errMsg}</span>
-            <div class="row">
-                <div class="col-xs-8">
-                    <div class="checkbox icheck">
-                        <label><input type="checkbox" name="rememberMe" value="7"> 记住 下次自动登录</label>
+            <div style="display: none" id="show">
+                <div class="form-group has-feedback">
+                    <input type="password" name="password" class="form-control" id="password"
+                           placeholder="新密码" value="${password}"> <span
+                        class="glyphicon glyphicon-lock form-control-feedback"></span>
+                </div>
+                <div class="form-group has-feedback">
+                    <input type="password" name="repassword" class="form-control" id="repassword"
+                           placeholder="重复新密码" value="${password}"> <span
+                        class="glyphicon glyphicon-lock form-control-feedback"></span>
+                </div>
+                <span style="font-size: 15px;color: red" id="errMsg">${errMsg}</span>
+                <div class="row">
+                    <div class="col-xs-4" style="padding-left: 20px">
+                        <button type="button" onclick="checkPassword()" class="btn btn-primary btn-block btn-flat"
+                                style="margin-left: 232px">确认修改
+                        </button>
                     </div>
+                    <!-- /.col -->
                 </div>
-                <!-- /.col -->
-                <div class="col-xs-4">
-                    <button type="button" onclick="checkLogin()" class="btn btn-primary btn-block btn-flat">登录</button>
-                </div>
-                <!-- /.col -->
             </div>
         </form>
-
-        <a href="#">忘记密码</a><br>
-
 
     </div>
     <!-- /.login-box-body -->
@@ -85,22 +86,97 @@
             checkboxClass: 'icheckbox_square-blue',
             radioClass: 'iradio_square-blue',
             increaseArea: '20%',// optional
-        });
+        })
+        if (sessionStorage.getItem('s') != null && sessionStorage.getItem('s') != 0) {
+            $("#but").attr('disabled', true)
+            $("#but").attr('font-size', '5px')
+            var s = sessionStorage.getItem('s');
+            var time = setInterval(function setTime() {
+                s = s - 1;
+                sessionStorage.setItem('s', s)
+                $('#but').val(sessionStorage.getItem('s') + "秒后获取")
+                if (sessionStorage.getItem('s') == 0) {
+                    clearInterval(time);
+                    $("#but").attr('disabled', false)
+                    $("#but").val("获取验证码")
+                    sessionStorage.removeItem("s")
+                }
+            }, 1000)
+        }
+        $("#email").val("")
+        $("#code").val("")
     });
 
-    function checkLogin() {
-        var password = $("#password").val();
-        var username = $("#username").val();
-        if (password == null || password == "" || username == "" || username == null) {
-            alert("用户名或密码不能为空");
-            return false;
+    function checkEmail() {
+        var reg = /^([a-zA-Z]|[0-9])(\w|\-)+@[a-zA-Z0-9]+\.([a-zA-Z]{2,4})$/;
+        var email = $("#email").val();
+        if (!reg.test(email)) {
+            alert("email格式错误")
+            return;
         }
-        $("form").submit();
+        $("#but").attr('disabled', true)
+        $.ajax({
+            type: "POST",
+            url: "${pageContext.request.contextPath}/user/checkEmail.do",
+            data: "email=" + email,
+            success: function (data) {
+                if (data.retStatus == "200") {
+                    $("#show").show();
+                    alert("验证码已经发送请注意查收")
+                    $("#but").attr('font-size', '5px')
+                    var s = 60;
+                    var time = setInterval(function setTime() {
+                        sessionStorage.setItem('s', s)
+                        $('#but').val(sessionStorage.getItem('s') + "秒后获取")
+                        s = s - 1;
+                        if (sessionStorage.getItem('s') == 0) {
+                            clearInterval(time);
+                            $("#but").attr('disabled', false)
+                            $("#but").val("获取验证码")
+                            sessionStorage.removeItem("s")
+                        }
+                    }, 1000)
+
+                } else if (data.retStatus == "400") {
+                    alert("该邮箱不存在")
+                    $("#email").val("");
+                } else {
+                    alert("请求异常")
+                }
+            }
+        })
     }
 
-    $("input").click(function () {
-        $("#errMsg").text("");
-    })
+    function checkPassword() {
+        var flag = true;
+        $("input").each(function () {
+            if ($(this).val() == "" || $(this).val() == null) {
+                $(this).attr('placeholder', '不能为空');
+                flag = false;
+            }
+        })
+        if ($("#password").val() != $("#repassword").val() && flag) {
+            alert("两次密码不一致")
+            return;
+        }
+        if (flag) {
+            $.ajax({
+                type: "POST",
+                url: "${pageContext.request.contextPath}/user/updatePwd.do",
+                data: $("form").serialize(),
+                dataType: "json",
+                success: function (data) {
+                    if (data.retStatus == "200") {
+                        sessionStorage.setItem("flag","success")
+                        $(location).attr('href', "${pageContext.request.contextPath}/pages/login.jsp?flag=success")
+                    } else {
+                        alert("密码修改失败")
+                    }
+                }
+            })
+        }
+        return;
+    }
 </script>
 </body>
 

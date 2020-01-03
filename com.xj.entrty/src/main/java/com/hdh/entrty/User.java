@@ -1,8 +1,11 @@
 package com.hdh.entrty;
 
+import lombok.Data;
+
 import java.util.List;
 
 //与数据库中users对应
+@Data
 public class User {
     private String id;
     private String email;

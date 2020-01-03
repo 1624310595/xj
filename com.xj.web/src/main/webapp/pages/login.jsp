@@ -60,8 +60,7 @@
             </div>
         </form>
 
-        <a href="#">忘记密码</a><br>
-
+        <a href="${pageContext.request.contextPath}/pages/updatePwd.jsp">忘记密码</a><br>
 
     </div>
     <!-- /.login-box-body -->
@@ -84,6 +83,10 @@
             radioClass: 'iradio_square-blue',
             increaseArea: '20%',// optional
         });
+        if (sessionStorage.getItem("flag") == "success") {
+            alert("密码修改成功")
+        }
+
     });
 
     function checkLogin() {
